@@ -1,0 +1,157 @@
+<title>Arkanoid con Javascript</title>
+
+
+<style>
+    body{
+        background: #111;
+    }
+
+    canvas{
+        border: solid white 4px;
+        border-bottom: none;
+        background: black;
+        margin: 0 auto;
+        display: block;
+    }
+
+    button{
+        background-color: #111;
+        color: white;
+        font-size: large;
+        font-weight: 600;
+        border-radius: 16px;
+        padding: 10px;
+        margin: 1em;
+    }
+</style>
+
+<canvas></canvas>
+
+<script>
+    const canvas = document.querySelector('canvas')
+    const context = canvas.getContext('2d')
+
+    canvas.width = 448
+    canvas.height = 400
+
+    // variables del juego
+    let counter = 0
+
+    // VARIABLES DE LA PELOTA
+    const ballRadius = 4;
+    
+    let x = canvas.width / 2  // posición de la pelota
+    let y = canvas.height -30
+
+    //velocidad de la pelota y dirección
+    let dx = 2
+    let dy = -2 // si va en negativo la pelota subira
+
+    //VARIABLES DE LA PALETA
+    const paddleHeight = 10
+    const paddleWidth = 50
+
+    let paddleX = (canvas.width - paddleWidth) / 2
+    let paddleY = canvas.height - paddleHeight - 10 
+
+    const rightPressed = false
+    const leftPressed = false
+
+
+    function drawBall(){
+        context.beginPath() //iniciar el trazado
+        context.arc(x,y, ballRadius, 0 , Math.PI * 2)
+        context.fillStyle = '#fff'
+        context.fill()
+        context.closePath() // cierre para mejorar rendimiento, terminar trazado
+    }
+
+    function drawPaddle(){
+        context.fillStyle = '#09f'
+        context.fillRect( // llenar un rectángulo
+            paddleX, // la coord X
+            paddleY, // la coord Y
+            paddleWidth, // ancho del dibujo
+            paddleHeight) // alto del dibujo
+    }
+
+    function drawBricks(){
+
+    }
+
+    function collisionDetection(){
+
+    }
+
+    function ballMovement(){
+        // rebotar las pelotas en los laterales
+        if(
+            x + dx > canvas.width - ballRadius ||// pared derecha
+            x + dx < ballRadius // pared izquierda
+        ){
+            dx = -dx
+        }
+        //rebotar en el techo
+        if( y + dy < ballRadius /*0 es la posición más alta */){
+            dy = -dy
+        }
+        //la pelota oca el suelo
+        if(y + dy > canvas.height - ballRadius){
+            console.log('GAME OVER')
+            document.location.reload() // se reinicia
+        }
+       x +=  dx
+       y += dy
+    }
+
+    function paddleMovement(){}
+
+    // funcion para limpiar el movimiento anterior de la pantalla
+    function cleanCanvas(){
+        context.clearRect(0,0, canvas.width, canvas.height)
+    }
+
+    function initEvents(){
+        document.addEventListener('keydown', keyDownHandler)
+        document.addEventListener('keyup', keyUpHandler)
+
+        function keyDownHandler(event){
+            const {key}  = event
+            if(key === 'Right' || key === 'ArrowRigth'){
+                rightPressed = true
+            } else if(key === 'Left' || key === 'ArrowLeft'){
+                leftPressed = true
+            }
+        }
+        function keyUpHandler(event){
+            const {key}  = event
+            if(key === 'Right' || key === 'ArrowRigth'){
+                rightPressed = false
+            } else if(key === 'Left' || key === 'ArrowLeft'){
+                leftPressed = false
+            }
+        }
+    }
+
+    function draw(){
+        cleanCanvas() 
+        // 1º dibujar los elementos
+        drawBall()
+        drawPaddle()
+        drawBricks()
+
+        //dibujar puntuaciön
+
+        // colisiones y movimientos
+        collisionDetection()
+        ballMovement()
+        paddleMovement()
+        
+    
+        // esta funcion se va a estar llamando constantemente
+        window.requestAnimationFrame(draw) 
+    }
+
+    draw()
+
+</script>
