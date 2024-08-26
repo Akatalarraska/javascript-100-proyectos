@@ -9,7 +9,7 @@
     canvas{
         border: solid white 4px;
         border-bottom: none;
-        background: black;
+        background: url('./bkg.png');
         margin: 0 auto;
         display: block;
     }
@@ -26,10 +26,16 @@
 </style>
 
 <canvas></canvas>
+<img hidden id='sprite' src="./sprite.png" alt="Sprite Arkanoid"/>
+<img hidden id="bricks" src="./bricks.png" alt="Sprite Bricks Arkanoid"/>
+
 
 <script>
     const canvas = document.querySelector('canvas')
     const context = canvas.getContext('2d')
+
+    const $sprite =  document.querySelector('#sprite')
+    const $bricks =  document.querySelector('#bricks')
 
     canvas.width = 448
     canvas.height = 400
@@ -44,19 +50,51 @@
     let y = canvas.height -30
 
     //velocidad de la pelota y dirección
-    let dx = 2
-    let dy = -2 // si va en negativo la pelota subira
+    let dx = 3
+    let dy = -3 // si va en negativo la pelota subira
 
     //VARIABLES DE LA PALETA
+    const PADDLE_SENSITIBITY = 8
     const paddleHeight = 10
     const paddleWidth = 50
 
     let paddleX = (canvas.width - paddleWidth) / 2
     let paddleY = canvas.height - paddleHeight - 10 
 
-    const rightPressed = false
-    const leftPressed = false
+    let rightPressed = false
+    let leftPressed = false
 
+    // VARIABLES DE LOS BRICKS
+    const brickRowCount = 6
+    const brickColumnCount = 13
+    const brickWidth = 30
+    const brickHeight = 14 
+    const brickPadding = 2
+    const brickOffSetTop = 80
+    const brickOffSetLeft = 16
+    const bricks = []
+
+    const BRICK_STATUS = {
+        ACTIVE : 1,
+        DESTROYED: 0
+    }
+
+    for ( let column = 0; column < brickColumnCount; column++){
+        bricks[column] = [] // inicializamos con el array vacio
+        for (let row = 0; row < brickRowCount; row++){
+            // calculamos la posición del ladrillo en la pantalla
+            const brickX = column * (brickWidth + brickPadding) + brickOffSetLeft
+            const brickY = row * (brickHeight + brickPadding) + brickOffSetTop
+            // asignar color aleatorio al ladrillo
+            const random = Math.floor(Math.random() * 8) // indice aleatorio del 0 al 7
+            // guardamos la info de cada ladrillo
+            bricks[column][row] = {
+                x: brickX,
+                y: brickY, 
+                status: BRICK_STATUS.ACTIVE, color: random
+            }
+        }
+    }
 
     function drawBall(){
         context.beginPath() //iniciar el trazado
@@ -68,16 +106,45 @@
 
     function drawPaddle(){
         context.fillStyle = '#09f'
-        context.fillRect( // llenar un rectángulo
-            paddleX, // la coord X
-            paddleY, // la coord Y
-            paddleWidth, // ancho del dibujo
-            paddleHeight) // alto del dibujo
+        // context.fillRect( // llenar un rectángulo
+        //     paddleX, // la coord X
+        //     paddleY, // la coord Y
+        //     paddleWidth, // ancho del dibujo
+        //     paddleHeight) // alto del dibujo
+        
+            context.drawImage(
+                $sprite,  //imagen
+                29,       // clipX donde empieza a recortar
+                174,      // clipY coordenadas de recorte
+                paddleWidth, // tamaño de recorte
+                paddleHeight, // tamaño de recorte
+                paddleX,  //posición X del dibujo
+                paddleY,  //posición Y del dibujo
+                paddleWidth, // ancho del dibujo
+                paddleHeight    // alto del dibujo
+
+            )
     }
 
     function drawBricks(){
-
+        for ( let column = 0; column < brickColumnCount; column++){
+            for (let row = 0; row < brickRowCount; row++){
+            const currentBrick = bricks[column][row]
+            if (currentBrick.status === BRICK_STATUS.DESTROYED) 
+            continue;
+            
+            contex.fillStyle = 'yellow'
+            context.rect(
+                currentBrick.x,
+                currentBrick.y,
+                brickWidth,
+                brickHeight
+            )
+            context.fill()
+            }
+        }
     }
+    
 
     function collisionDetection(){
 
@@ -95,8 +162,12 @@
         if( y + dy < ballRadius /*0 es la posición más alta */){
             dy = -dy
         }
-        //la pelota oca el suelo
-        if(y + dy > canvas.height - ballRadius){
+        // colisión con el paddle
+        const isBallSamXAsPaddel = ((x > paddleX) && (x < (paddleX + paddleWidth))) // del inicio al final de la pala
+        const isBallTouchingPaddle = y + dy > paddleY
+       if(isBallSamXAsPaddel && isBallTouchingPaddle){
+            dy = -dy
+       }else if(y + dy > canvas.height - ballRadius){ //la pelota oca el suelo
             console.log('GAME OVER')
             document.location.reload() // se reinicia
         }
@@ -104,7 +175,14 @@
        y += dy
     }
 
-    function paddleMovement(){}
+    function paddleMovement(){
+        if(rightPressed && paddleX < canvas.width - paddleWidth){
+            paddleX += PADDLE_SENSITIBITY
+        } else if (leftPressed && paddleX > 0){
+            paddleX -=  PADDLE_SENSITIBITY
+        }
+        
+    }
 
     // funcion para limpiar el movimiento anterior de la pantalla
     function cleanCanvas(){
@@ -117,7 +195,7 @@
 
         function keyDownHandler(event){
             const {key}  = event
-            if(key === 'Right' || key === 'ArrowRigth'){
+            if(key === 'Right' || key === 'ArrowRight'){
                 rightPressed = true
             } else if(key === 'Left' || key === 'ArrowLeft'){
                 leftPressed = true
@@ -125,7 +203,7 @@
         }
         function keyUpHandler(event){
             const {key}  = event
-            if(key === 'Right' || key === 'ArrowRigth'){
+            if(key === 'Right' || key === 'ArrowRight'){
                 rightPressed = false
             } else if(key === 'Left' || key === 'ArrowLeft'){
                 leftPressed = false
@@ -134,6 +212,7 @@
     }
 
     function draw(){
+        console.log({leftPressed, rightPressed})
         cleanCanvas() 
         // 1º dibujar los elementos
         drawBall()
@@ -153,5 +232,6 @@
     }
 
     draw()
+    initEvents()
 
 </script>
