@@ -67,8 +67,8 @@
     // VARIABLES DE LOS BRICKS
     const brickRowCount = 6
     const brickColumnCount = 13
-    const brickWidth = 30
-    const brickHeight = 14 
+    const brickWidth = 32
+    const brickHeight = 16
     const brickPadding = 2
     const brickOffSetTop = 80
     const brickOffSetLeft = 16
@@ -86,12 +86,13 @@
             const brickX = column * (brickWidth + brickPadding) + brickOffSetLeft
             const brickY = row * (brickHeight + brickPadding) + brickOffSetTop
             // asignar color aleatorio al ladrillo
-            const random = Math.floor(Math.random() * 8) // indice aleatorio del 0 al 7
+            const random = Math.floor(Math.random() * 8) // index aleatorio del 0 al 7 - indices del brick
             // guardamos la info de cada ladrillo
             bricks[column][row] = {
                 x: brickX,
                 y: brickY, 
-                status: BRICK_STATUS.ACTIVE, color: random
+                status: BRICK_STATUS.ACTIVE, 
+                color: random
             }
         }
     }
@@ -106,11 +107,11 @@
 
     function drawPaddle(){
         context.fillStyle = '#09f'
-        // context.fillRect( // llenar un rectángulo
-        //     paddleX, // la coord X
-        //     paddleY, // la coord Y
-        //     paddleWidth, // ancho del dibujo
-        //     paddleHeight) // alto del dibujo
+        context.fillRect( // llenar un rectángulo
+            paddleX, // la coord X
+            paddleY, // la coord Y
+            paddleWidth, // ancho del dibujo
+            paddleHeight) // alto del dibujo
         
             context.drawImage(
                 $sprite,  //imagen
@@ -132,22 +133,52 @@
             const currentBrick = bricks[column][row]
             if (currentBrick.status === BRICK_STATUS.DESTROYED) 
             continue;
-            
-            contex.fillStyle = 'yellow'
-            context.rect(
+            // tabla de ladrillos de color amarillo
+            // context.fillStyle = 'yellow'
+            // context.rect(
+            //     currentBrick.x,
+            //     currentBrick.y,
+            //     brickWidth,
+            //     brickHeight
+            // )
+            // context.strokeStyle = '#000'
+            // context.stroke()
+            // context.fill()
+
+            const clipX = currentBrick.color * 32
+
+            context.drawImage(
+                $bricks,
+                clipX,
+                0,
+                30,
+                14,
                 currentBrick.x,
                 currentBrick.y,
                 brickWidth,
                 brickHeight
             )
-            context.fill()
             }
         }
     }
     
 
     function collisionDetection(){
+        for ( let column = 0; column < brickColumnCount; column++){
+            for (let row = 0; row < brickRowCount; row++){
+                const currentBrick = bricks[column][row]
+                if (currentBrick.status === BRICK_STATUS.DESTROYED) 
+                continue;
 
+                const isBallSameXAsBricks = x > currentBrick.x && x < currentBrick.x + brickWidth
+                const isBallSameYAsBricks = y > currentBrick.y && y < currentBrick.y + brickHeight
+                
+                if(isBallSameXAsBricks && isBallSameYAsBricks){
+                    dy = -dy
+                    currentBrick.status = BRICK_STATUS.DESTROYED
+                }
+            }
+        }
     }
 
     function ballMovement(){
